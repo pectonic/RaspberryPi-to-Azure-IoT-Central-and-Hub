@@ -8,26 +8,24 @@ from azure.iot.device import MethodResponse
 import random
 import pnp_helper
 import time
-import board
-import adafruit_dht
+import sqlite3
 
 logging.basicConfig(level=logging.ERROR)
 
 # Initial the dht device, with data pin connected to:
-dhtDevice = adafruit_dht.DHT11(board.D4)
-dhtDevice = adafruit_dht.DHT11(board.D4, use_pulseio=False)
+
 ################################
 #Insert your device details
 
-DEVICE_ID = "DHTmonitor1"
-DEVICE_ID_SCOPE = "0ne0055FC48"
-DEVICE_KEY = "+YUqsYFAurNwMVpb5RQFrKOAWcM+e8Jc16YBv4XEnUw="    #Primary Key
+DEVICE_ID = "piMonitor1"
+DEVICE_ID_SCOPE = "0ne006696DD"
+DEVICE_KEY = "+Mnu4pBg8KbVRD58rA6bduFkL9joZCU9CvIfxsDsJD8="    #Primary Key
 
 #copy and paste your interface id from your device template
-model_id = "dtmi:rpitoazure:RPiDHT_4w8;1"
+model_id = "dtmi:pi4homework:pi4DHT11_2lg;1"
 
 #Type your device template component name
-sensorName1 = "DHTsensor"
+sensorName1 = "DHTsensorDatas"
 
 #####################################################
 # TELEMETRY TASKS
@@ -42,7 +40,12 @@ async def send_telemetry_from_temp_controller(device_client, telemetry_msg, comp
 
 
 #####################################################
+# reading data from sqlite database
 
+
+con = sqlite3.connect("/home/tt-can/Desktop/azure iot central raspberrypi sdk/azure-iot-device/samples/pnp/temperature.db")
+
+cur = con.cursor()
 #####################################################
 # An # END KEYBOARD INPUT LISTENER to quit application
 
@@ -113,16 +116,18 @@ async def main():
 
     async def send_telemetry():
         print("Sending telemetry from various components")
-
-        while True:
+        
+        for row in cur.execute('SELECT * FROM dhtsensor'):
+            
+        
             try:
-                temperature_c = dhtDevice.temperature
+                temperature_c = row[1]
                 temperature_msg = {"Temperature": temperature_c}
 
                 await send_telemetry_from_temp_controller(
                     device_client, temperature_msg, sensorName1
                 )
-                humidity = dhtDevice.humidity
+                humidity = row[2]
                 humidity_msg = {"Humidity": humidity}
 
                 await send_telemetry_from_temp_controller(
@@ -133,9 +138,7 @@ async def main():
                 print(error.args[0])
                 time.sleep(2.0)
                 continue
-            except Exception as error:
-                dhtDevice.exit()
-                raise error
+            
 
     send_telemetry_task = asyncio.ensure_future(send_telemetry())
 
