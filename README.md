@@ -1,5 +1,4 @@
-Hi 
-[Contribution guidelines for this project](docs/CONTRIBUTING.md) 
+ [Hi, I worked with this folder about sending datas to IoT central and hub](pectonic/RaspberryPi-to-Azure-IoT-Central-and-Hub/tree/main/azure-iot-device/samples/pnp) 
 
 
 
