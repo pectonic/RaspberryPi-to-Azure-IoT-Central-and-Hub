@@ -1,3 +1,8 @@
+Hi 
+[Contribution guidelines for this project](docs/CONTRIBUTING.md) 
+
+
+
 #
 <div align=center>
     <img src="./azure-iot-device/doc/images/azure_iot_sdk_python_banner.png"></img>
