@@ -7,19 +7,24 @@ from azure.iot.device.aio import ProvisioningDeviceClient
 from azure.iot.device import MethodResponse
 import random
 import pnp_helper
+import time
+import board
+import adafruit_dht
 
 logging.basicConfig(level=logging.ERROR)
 
-
+# Initial the dht device, with data pin connected to:
+dhtDevice = adafruit_dht.DHT11(board.D4)
+dhtDevice = adafruit_dht.DHT11(board.D4, use_pulseio=False)
 ################################
 #Insert your device details
 
-DEVICE_ID = "RPiDHTV1"
-DEVICE_ID_SCOPE = "0ne0055F146"
-DEVICE_KEY = "z1I5lfwxaRiHyJn2kFzgjl3kzqO3CNBrgifklgsjltg="    #Primary Key
+DEVICE_ID = "DHTmonitor1"
+DEVICE_ID_SCOPE = "0ne0055FC48"
+DEVICE_KEY = "+YUqsYFAurNwMVpb5RQFrKOAWcM+e8Jc16YBv4XEnUw="    #Primary Key
 
 #copy and paste your interface id from your device template
-model_id = "dtmi:raspberrypitoazureiotcentral:RPiDHT_6li;1"
+model_id = "dtmi:rpitoazure:RPiDHT_4w8;1"
 
 #Type your device template component name
 sensorName1 = "DHTsensor"
@@ -110,16 +115,27 @@ async def main():
         print("Sending telemetry from various components")
 
         while True:
-            temperature_msg = {"Temperature": random(10)}
+            try:
+                temperature_c = dhtDevice.temperature
+                temperature_msg = {"Temperature": temperature_c}
 
-            await send_telemetry_from_temp_controller(
-                device_client, temperature_msg, sensorName1
-            )
-            humidity_msg = {"Humidity": random(5)}
+                await send_telemetry_from_temp_controller(
+                    device_client, temperature_msg, sensorName1
+                )
+                humidity = dhtDevice.humidity
+                humidity_msg = {"Humidity": humidity}
 
-            await send_telemetry_from_temp_controller(
-                device_client, humidity_msg, sensorName1
-            )
+                await send_telemetry_from_temp_controller(
+                    device_client, humidity_msg, sensorName1
+                )
+            except RuntimeError as error:
+        # Errors happen fairly often, DHT's are hard to read, just keep going
+                print(error.args[0])
+                time.sleep(2.0)
+                continue
+            except Exception as error:
+                dhtDevice.exit()
+                raise error
 
     send_telemetry_task = asyncio.ensure_future(send_telemetry())
 
@@ -154,3 +170,4 @@ if __name__ == "__main__":
     # loop = asyncio.get_event_loop()
     # loop.run_until_complete(main())
     # loop.close()
+
